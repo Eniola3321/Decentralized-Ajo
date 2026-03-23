@@ -109,20 +109,49 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user's circles (as member or organizer)
-    const circles = await prisma.circle.findMany({
-      where: {
-        OR: [
-          { organizerId: payload.userId },
-          {
-            members: {
-              some: {
-                userId: payload.userId,
-              },
+    // Extract query parameters
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
+
+    // Build the query where clause
+    const whereClause: any = {
+      OR: [
+        { organizerId: payload.userId },
+        {
+          members: {
+            some: {
+              userId: payload.userId,
             },
           },
-        ],
-      },
+        },
+      ],
+    };
+
+    // Add search filter if provided
+    if (search) {
+      whereClause.AND = [
+        ...(whereClause.AND || []),
+        {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        },
+      ];
+    }
+
+    // Add status filter if provided and not 'ALL'
+    if (status && status.toUpperCase() !== 'ALL') {
+      whereClause.AND = [
+        ...(whereClause.AND || []),
+        { status: status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() },
+      ];
+    }
+
+    // Get user's circles
+    const circles = await prisma.circle.findMany({
+      where: whereClause,
       include: {
         organizer: {
           select: {
