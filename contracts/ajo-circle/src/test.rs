@@ -165,7 +165,6 @@ fn test_slash_and_disqualify() {
 
     let contract_id = env.register_contract(None, AjoCircle);
     let client = AjoCircleClient::new(&env, &contract_id);
-
     let organizer = Address::generate(&env);
     let member = Address::generate(&env);
 
@@ -197,7 +196,6 @@ fn test_grace_period_reset() {
 
     let contract_id = env.register_contract(None, AjoCircle);
     let client = AjoCircleClient::new(&env, &contract_id);
-
     let organizer = Address::generate(&env);
     let member = Address::generate(&env);
 
