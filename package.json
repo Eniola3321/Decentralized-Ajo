@@ -4,14 +4,21 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:server": "tsx watch server/index.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "next build",
+    "build:server": "tsc -p server/tsconfig.json",
     "start": "next start",
+    "start:server": "node server/dist/index.js",
     "lint": "eslint .",
     "test": "npm run test:contracts",
     "test:contracts": "cd contracts/ajo-circle && cargo test --lib"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
     "@prisma/client": "^5.10.0",
     "@prisma/extension-accelerate": "^3.0.1",
     "@radix-ui/react-accordion": "1.2.12",
@@ -77,6 +84,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22",
     "@types/nodemailer": "^7.0.11",

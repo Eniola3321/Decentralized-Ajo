@@ -9,6 +9,10 @@ node_modules/
 .env*.local
 .DS_Store
 
+# Server build output
+server/dist/
+*.log
+
 # Rust ignores
 target/
 **/*.rs.bk
