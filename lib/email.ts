@@ -1,69 +1,39 @@
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
-import { logger } from '@/lib/logger';
+import { Resend } from 'resend';
 
-const FROM = 'no-reply@ajoconnect.com';
+const FROM = 'Ajo Platform <alerts@yourdomain.com>';
 
-/** Build a transporter: prefers AWS SES when credentials are present, falls back to Gmail SMTP. */
-function buildTransporter(): Transporter {
-  if (
-    process.env.AWS_SES_ACCESS_KEY_ID &&
-    process.env.AWS_SES_SECRET_ACCESS_KEY &&
-    process.env.AWS_SES_REGION
-  ) {
-    return nodemailer.createTransport({
-      host: `email-smtp.${process.env.AWS_SES_REGION}.amazonaws.com`,
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.AWS_SES_ACCESS_KEY_ID,
-        pass: process.env.AWS_SES_SECRET_ACCESS_KEY,
-      },
-    });
-  }
-
-  // Fallback: Gmail SMTP (App Password required when 2FA is enabled)
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  return new Resend(key);
 }
 
-const transporter = buildTransporter();
-
-async function sendMail(to: string, subject: string, html: string): Promise<void> {
+export async function sendPayoutAlert(email: string, userName: string, amount: number) {
+  const resend = getResend();
+  if (!resend) return;
   try {
-    await transporter.sendMail({ from: FROM, to, subject, html });
-    logger.info(`Email sent to ${to}`);
-  } catch (error) {
-    logger.error('Email send failed', error);
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: "It's your turn — payout ready!",
+      html: `<p>Hi ${userName},</p><p>Your payout of <strong>${amount} XLM</strong> is ready to claim. Log in to your Ajo dashboard to claim it.</p>`,
+    });
+  } catch (err) {
+    console.error('[email] sendPayoutAlert failed:', err);
   }
 }
 
-export async function sendPayoutAlert(email: string, userName: string, amount: number): Promise<void> {
-  const subject = "It's your turn — payout ready!";
-  const html = `
-    <p>Hi ${userName},</p>
-    <p>Your payout of <strong>${amount} XLM</strong> is ready to claim.</p>
-    <p>Log in to your Ajo dashboard to claim it.</p>
-  `;
-  await sendMail(email, subject, html);
-}
-
-export async function sendContributionReminder(
-  email: string,
-  userName: string,
-  amount: number,
-  circleName: string,
-): Promise<void> {
-  const subject = `Contribution due for ${circleName}`;
-  const html = `
-    <p>Hi ${userName},</p>
-    <p>Your contribution of <strong>${amount} XLM</strong> is due for the circle
-    <strong>${circleName}</strong>. Please contribute before the deadline.</p>
-  `;
-  await sendMail(email, subject, html);
+export async function sendContributionReminder(email: string, userName: string, amount: number, circleName: string) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: `Contribution due for ${circleName}`,
+      html: `<p>Hi ${userName},</p><p>Your contribution of <strong>${amount} XLM</strong> is due for the circle <strong>${circleName}</strong>. Please contribute before the deadline.</p>`,
+    });
+  } catch (err) {
+    console.error('[email] sendContributionReminder failed:', err);
+  }
 }

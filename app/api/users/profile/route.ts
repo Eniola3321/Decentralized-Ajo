@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { verifyToken, extractToken } from '@/lib/auth';
 import { validateBody, applyRateLimit } from '@/lib/api-helpers';
@@ -10,6 +11,8 @@ const USER_SELECT = {
   email: true,
   firstName: true,
   lastName: true,
+  username: true,
+  notificationEmail: true,
   bio: true,
   phoneNumber: true,
   profilePicture: true,
@@ -56,6 +59,12 @@ export async function PUT(request: NextRequest) {
       data: {
         ...(data.firstName !== undefined && { firstName: data.firstName.trim() }),
         ...(data.lastName !== undefined && { lastName: data.lastName.trim() }),
+        ...(data.username !== undefined && {
+          username: data.username.trim() === '' ? null : data.username.trim(),
+        }),
+        ...(data.notificationEmail !== undefined && {
+          notificationEmail: data.notificationEmail.trim() === '' ? null : data.notificationEmail.trim(),
+        }),
         ...(data.bio !== undefined && { bio: data.bio }),
         ...(data.phoneNumber !== undefined && { phoneNumber: data.phoneNumber }),
       },
@@ -64,6 +73,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, user });
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return NextResponse.json({ error: 'That username is already taken' }, { status: 409 });
+    }
     console.error('Update profile error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

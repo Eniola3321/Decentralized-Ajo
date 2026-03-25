@@ -22,6 +22,10 @@ model User {
   
   firstName String?
   lastName  String?
+  /// Preferred display name (optional; shown instead of email when set)
+  username  String? @unique
+  /// Email used for product notifications (optional; can differ from login email)
+  notificationEmail String?
   phoneNumber String?
   profilePicture String?
   bio       String?

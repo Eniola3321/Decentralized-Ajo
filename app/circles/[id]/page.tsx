@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Users, TrendingUp, Calendar, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import { authenticatedFetch } from '@/lib/auth-client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminPanel } from './components/admin-panel';
 
 interface Member {
@@ -103,6 +104,10 @@ function getStatusVariant(status: string): 'default' | 'secondary' | 'destructiv
   }
 }
 
+function formatXLM(n: number): string {
+  return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 7 }) : '0';
+}
+
 export default function CircleDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -110,10 +115,9 @@ export default function CircleDetailPage() {
 
   const [circle, setCircle] = useState<Circle | null>(null);
   const [loading, setLoading] = useState(true);
-const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
-const [contributionAmount, setContributionAmount] = useState('');
-const [submittingContribution, setSubmittingContribution] = useState(false);
-
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [contributionAmount, setContributionAmount] = useState('');
+  const [submittingContribution, setSubmittingContribution] = useState(false);
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -153,6 +157,35 @@ const [submittingContribution, setSubmittingContribution] = useState(false);
       toast.error('Failed to load circle');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleContribute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(contributionAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Enter a valid amount');
+      return;
+    }
+    setSubmittingContribution(true);
+    try {
+      const res = await authenticatedFetch(`/api/circles/${circleId}/contribute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error((json as { error?: string }).error ?? 'Contribution failed');
+        return;
+      }
+      toast.success('Contribution recorded');
+      setContributionAmount('');
+      await fetchCircle();
+    } catch {
+      toast.error('Contribution failed');
+    } finally {
+      setSubmittingContribution(false);
     }
   };
 
@@ -246,6 +279,7 @@ const [submittingContribution, setSubmittingContribution] = useState(false);
         </div>
       </div>
 
+      <div className="container mx-auto px-4 py-8">
         {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className={`grid w-full ${isOrganizer ? 'grid-cols-5' : 'grid-cols-4'}`}>

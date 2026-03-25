@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "npm run test:contracts",
+    "test:contracts": "cd contracts/ajo-circle && cargo test --lib"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -64,6 +66,7 @@
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
+    "resend": "^4.8.0",
     "sonner": "^1.7.1",
     "swr": "^2.2.5",
     "tailwind-merge": "^3.3.1",

@@ -13,6 +13,8 @@ interface UserProfile {
   email: string;
   firstName?: string;
   lastName?: string;
+  username?: string | null;
+  notificationEmail?: string | null;
   bio?: string;
   phoneNumber?: string;
   profilePicture?: string;
@@ -57,7 +59,9 @@ export default function ProfilePage() {
   };
 
   const displayName = profile
-    ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email
+    ? profile.username?.trim() ||
+      [profile.firstName, profile.lastName].filter(Boolean).join(' ') ||
+      profile.email
     : '';
 
   const initials = profile
@@ -110,6 +114,11 @@ export default function ProfilePage() {
             <div>
               <p className="text-xl font-semibold text-foreground">{displayName}</p>
               <p className="text-sm text-muted-foreground">{profile.email}</p>
+              {profile.notificationEmail && profile.notificationEmail !== profile.email && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Notifications: {profile.notificationEmail}
+                </p>
+              )}
               {profile.walletAddress && (
                 <p className="text-xs text-muted-foreground mt-1 font-mono truncate max-w-xs">
                   {profile.walletAddress}
@@ -130,6 +139,8 @@ export default function ProfilePage() {
               initialData={{
                 firstName: profile.firstName ?? '',
                 lastName: profile.lastName ?? '',
+                username: profile.username ?? '',
+                notificationEmail: profile.notificationEmail ?? '',
                 phoneNumber: profile.phoneNumber ?? '',
                 bio: profile.bio ?? '',
               }}
