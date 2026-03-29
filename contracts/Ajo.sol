@@ -1,25 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract Ajo {
-    address public admin;
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+/**
+ * @title Ajo
+ * @dev A simple rotating savings and credit association (ROSCA) contract.
+ * Includes a pause mechanism for emergency situations.
+ */
+contract Ajo is Pausable, AccessControl {
     uint256 public contributionAmount;
+    uint256 public cycleDuration;
     uint32 public currentCycle;
-    uint32 public maxMembers;
-
-    address[] public members;
-
-    /// @notice The maximum number of members allowed in the pool
     uint256 public maxMembers;
+    uint256 public totalPool;
 
     /// @notice List of all members in the Ajo pool
     address[] public members;
 
     /// @notice Mapping from member address to their current balance in the pool
     mapping(address => uint256) public balances;
-
-    /// @notice The total amount currently held in the pool
-    uint256 public totalPool;
 
     /// @notice Event emitted when a deposit is made
     event Deposited(address indexed member, uint256 amount);
@@ -50,16 +51,33 @@ contract Ajo {
         uint256 _cycleDuration,
         uint256 _maxMembers
     ) {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         contributionAmount = _contributionAmount;
         cycleDuration = _cycleDuration;
         maxMembers = _maxMembers;
+        currentCycle = 1;
+    }
+
+    /**
+     * @notice Allows the admin to pause the contract in case of emergency.
+     */
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
+    }
+
+    /**
+     * @notice Allows the admin to unpause the contract.
+     */
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
     }
 
     /**
      * @notice Allows a member to deposit the required contribution amount.
      * @dev Enforces strict deposit of contributionAmount and updates pool state.
+     * Can only be called when the contract is not paused.
      */
-    function deposit() external payable {
+    function deposit() external payable whenNotPaused {
         if(msg.value != contributionAmount) revert InvalidContribution();
         if(members.length >= maxMembers) revert AjoIsFull();
 
@@ -72,11 +90,6 @@ contract Ajo {
         totalPool += msg.value;
 
         emit Deposited(msg.sender, msg.value);
-    constructor(uint256 _amount, uint32 _maxMembers) {
-        admin = msg.sender;
-        contributionAmount = _amount;
-        maxMembers = _maxMembers;
-        currentCycle = 1;
     }
 
     /// @notice Get all member addresses
