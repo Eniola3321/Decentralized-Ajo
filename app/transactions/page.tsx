@@ -2,17 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { TransactionTable, type Transaction } from '@/components/transaction-table';
 import { authenticatedFetch } from '@/lib/auth-client';
-
-// The interface and statusVariant are no longer needed here 
-// because they are imported from '@/components/transaction-table'
-
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -23,27 +16,35 @@ export default function TransactionsPage() {
   const [sortBy, setSortBy] = useState<'createdAt' | 'amount'>('createdAt');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 
-  const fetchTransactions = useCallback(async (p: number, sb: string, o: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/auth/login'); return; }
-
-    setLoading(true);
-    try {
-      const res = await authenticatedFetch(`/api/transactions?page=${p}&sortBy=${sb}&order=${o}`);
-      if (res.status === 401) {
+  const fetchTransactions = useCallback(
+    async (p: number, sb: string, o: string) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
         router.push('/auth/login');
         return;
       }
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setTransactions(data.contributions);
-      setTotal(data.total);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+
+      setLoading(true);
+      try {
+        const res = await authenticatedFetch(
+          `/api/transactions?page=${p}&sortBy=${sb}&order=${o}`
+        );
+        if (res.status === 401) {
+          router.push('/auth/login');
+          return;
+        }
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setTransactions(data.contributions);
+        setTotal(data.total);
+      } catch {
+        // silent — keep previous data on transient errors
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router]
+  );
 
   useEffect(() => {
     fetchTransactions(page, sortBy, order);
@@ -51,7 +52,7 @@ export default function TransactionsPage() {
 
   const toggleSort = (col: 'createdAt' | 'amount') => {
     if (sortBy === col) {
-      setOrder((o: 'asc' | 'desc') => o === 'asc' ? 'desc' : 'asc');
+      setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortBy(col);
       setOrder('desc');
@@ -63,6 +64,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
@@ -73,68 +75,48 @@ export default function TransactionsPage() {
         </div>
       </div>
 
+      {/* Body */}
       {loading ? (
-        <div className="text-center py-16 text-muted-foreground">Loading...</div>
+        <div className="text-center py-16 text-muted-foreground">Loading…</div>
       ) : transactions.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg">No transactions yet</p>
-          <p className="text-sm mt-1">Your contributions will appear here once you join a circle.</p>
+          <p className="text-sm mt-1">
+            Your contributions will appear here once you join a circle.
+          </p>
         </div>
       ) : (
         <>
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <Button variant="ghost" size="sm" className="-ml-3" onClick={() => toggleSort('createdAt')}>
-                      Date <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead>Circle</TableHead>
-                  <TableHead>Round</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => toggleSort('amount')}>
-                      Amount <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </Button>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((tx: Transaction) => (
-                  <TableRow key={tx.id}>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(tx.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/circles/${tx.circle.id}`} className="hover:underline font-medium">
-                        {tx.circle.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">#{tx.round}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant[tx.status] ?? 'secondary'}>
-                        {tx.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm">
-                      {tx.amount.toFixed(2)} XLM
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <TransactionTable
+              transactions={transactions}
+              onSort={toggleSort}
+              sortBy={sortBy}
+              order={order}
+            />
           </div>
 
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p: number) => p - 1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
                   Previous
                 </Button>
-                <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((p: number) => p + 1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
                   Next
                 </Button>
               </div>
