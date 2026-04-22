@@ -23,8 +23,5 @@ jobs:
         with:
           node-version: 20
 
-      - name: Environment Check
-        run: ls -R
-
       - name: Run Limit Sync Check
         run: node scripts/check-limit-sync.mjs
