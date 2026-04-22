@@ -34,6 +34,14 @@ A full-stack decentralized savings circle application built on the Stellar Netwo
 - ✅ **User Accounts**: Email/password authentication with JWT
 - ✅ **Wallet Integration**: Connect Stellar wallets (Freighter, Lobstr)
 
+### Wallet Integration
+
+Stellar Ajo includes robust wallet features for seamless Web3 interaction:
+- **Network Awareness**: The application continuously monitors the active network of your connected wallet (Freighter, Lobstr). 
+- **Safe Signing Context**: If a user attempts to interact with the dApp while their wallet is on the wrong network (e.g., wallet on Mainnet but app is on Testnet), an explicit **Network Mismatch Warning** is shown via a persistent UI badge and modal. The modal explains how to switch the network to safely proceed.
+- **Transaction Submission**: Uses Soroban and Stellar SDKs to securely request signatures and poll for transaction success.
+
+
 ### Dashboard Features
 - Circle creation and management
 - Member management

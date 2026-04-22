@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CircleDot, ArrowRight, Wallet, Users, LayoutGrid } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowRight, Wallet, Users } from 'lucide-react';
 import { CircleListSkeleton } from './circle-list-skeleton';
+import { NoCirclesFilteredEmpty, NoCirclesAllEmpty } from '@/components/ui/empty-states';
 
 interface Circle {
   id: string;
@@ -16,30 +16,24 @@ interface Circle {
 interface CircleListProps {
   circles: Circle[];
   loading: boolean;
+  searchQuery?: string;
+  statusFilter?: string;
+  onClearFilters?: () => void;
 }
 
-export function CircleList({ circles, loading }: CircleListProps) {
+export function CircleList({ circles, loading, searchQuery, statusFilter, onClearFilters }: CircleListProps) {
   if (loading) {
     return <CircleListSkeleton />;
   }
 
+  const hasActiveFilters =
+    (searchQuery?.trim().length ?? 0) > 0 ||
+    (statusFilter !== '' && statusFilter !== 'ALL');
+
   if (circles.length === 0) {
-    return (
-      <Card className="text-center py-16 border-dashed bg-muted/20">
-        <CardContent>
-          <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <LayoutGrid className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">No circles found</h3>
-          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-            We couldn't find any circles matching your current search or filter criteria.
-          </p>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Clear all filters
-          </Button>
-        </CardContent>
-      </Card>
-    );
+    return hasActiveFilters
+      ? <NoCirclesFilteredEmpty onClearFilters={onClearFilters ?? (() => {})} />
+      : <NoCirclesAllEmpty />;
   }
 
   return (

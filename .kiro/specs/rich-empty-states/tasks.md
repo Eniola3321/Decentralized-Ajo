@@ -12,8 +12,8 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
   - This is a non-breaking change — all existing usages continue to work
   - _Requirements: 1.1, 1.2, 10.3_
 
-- [~] 2. Create `components/ui/empty-states.tsx` with all six variant components
-  - [-] 2.1 Implement `UnauthenticatedDashboardEmpty`
+- [x] 2. Create `components/ui/empty-states.tsx` with all six variant components
+  - [x] 2.1 Implement `UnauthenticatedDashboardEmpty`
     - Props: `onConnect: () => void`, `isConnecting?: boolean`
     - Icon: `Wallet` with `aria-hidden="true"`
     - Title: "Connect Your Wallet"
@@ -21,7 +21,7 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
     - CTA: "Connect Wallet" button that calls `onConnect`; when `isConnecting` is true, show loading text and set `aria-disabled="true"` and `aria-busy="true"` on the button
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 9.1–9.5, 10.1, 10.2, 10.3, 10.4_
 
-  - [~] 2.2 Implement `NoActiveGroupsEmpty`
+  - [x] 2.2 Implement `NoActiveGroupsEmpty`
     - No props required
     - Icon: `Users` with `aria-hidden="true"`
     - Title: "No Active Groups"
@@ -30,7 +30,7 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
     - Secondary CTA: `<Link href="/circles/create">` labelled "Create a Circle"
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 9.1–9.5, 10.1, 10.2, 10.3_
 
-  - [~] 2.3 Implement `NoUserAjosEmpty`
+  - [x] 2.3 Implement `NoUserAjosEmpty`
     - No props required
     - Icon: `CircleDot` with `aria-hidden="true"`
     - Title: "No Ajo Groups Yet"
@@ -38,7 +38,7 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
     - CTA: `<Link href="/circles/join">` labelled "Browse Ajos"
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 9.1–9.5, 10.1, 10.2, 10.3_
 
-  - [~] 2.4 Implement `NoCirclesFilteredEmpty`
+  - [x] 2.4 Implement `NoCirclesFilteredEmpty`
     - Props: `onClearFilters: () => void`
     - Icon: `SearchX` with `aria-hidden="true"`
     - Title: "No circles found"
@@ -46,7 +46,7 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
     - CTA: "Clear filters" button that calls `onClearFilters`
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 9.1–9.5, 10.1, 10.2, 10.3_
 
-  - [~] 2.5 Implement `NoCirclesAllEmpty`
+  - [x] 2.5 Implement `NoCirclesAllEmpty`
     - No props required
     - Icon: `LayoutGrid` with `aria-hidden="true"`
     - Title: "No circles yet"
@@ -55,7 +55,7 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
     - Secondary CTA: `<Link href="/circles/join">` labelled "Join a Circle"
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 9.1–9.5, 10.1, 10.2, 10.3_
 
-  - [~] 2.6 Implement `NoTransactionsEmpty`
+  - [x] 2.6 Implement `NoTransactionsEmpty`
     - No props required
     - Icon: `Receipt` with `aria-hidden="true"`
     - Title: "No transactions yet"
@@ -63,7 +63,7 @@ Replace the ad-hoc inline empty-state markup across the Dashboard, Transactions 
     - CTA: `<Link href="/circles/join">` labelled "Join a Circle"
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 9.1–9.5, 10.1, 10.2, 10.3_
 
-- [~] 3. Extend `CircleList` props and wire up conditional empty states
+- [-] 3. Extend `CircleList` props and wire up conditional empty states
   - Add `searchQuery?: string`, `statusFilter?: string`, and `onClearFilters?: () => void` to the `CircleListProps` interface in `components/dashboard/circle-list.tsx`
   - Implement the `hasActiveFilters` check: `(searchQuery?.trim().length ?? 0) > 0 || (statusFilter !== '' && statusFilter !== 'ALL')`
   - Replace the existing single inline empty-state block with a conditional: render `<NoCirclesFilteredEmpty onClearFilters={onClearFilters ?? (() => {})} />` when `hasActiveFilters` is true, and `<NoCirclesAllEmpty />` when false

@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 import { CircleDot, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ConnectButton } from "@rainbow-me/rainbowkit"; // <-- replaced WalletButton
+import { WalletButton } from "@/components/wallet-button";
+import { NetworkIndicator } from "@/components/wallet/network-indicator";
+import { NetworkMismatchModal } from "@/components/wallet/network-mismatch-modal";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
@@ -172,8 +174,9 @@ export function Navbar() {
           <div className="flex items-center gap-2 ml-auto">
             <NotificationBell />
             <ThemeToggle />
-            <div className="hidden sm:block">
-              <ConnectButton />
+            <div className="hidden sm:flex items-center gap-2">
+              <NetworkIndicator />
+              <WalletButton />
             </div>
 
             {/* Hamburger — mobile only */}
@@ -234,8 +237,12 @@ export function Navbar() {
             </ul>
 
             {/* Mobile Wallet Button */}
-            <div className="mt-6 pt-4 border-t sm:hidden">
-              <ConnectButton />
+            <div className="mt-6 pt-4 border-t sm:hidden flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Network</span>
+                <NetworkIndicator />
+              </div>
+              <WalletButton />
             </div>
           </div>
         </div>
@@ -249,6 +256,7 @@ export function Navbar() {
           aria-hidden="true"
         />
       )}
+      <NetworkMismatchModal />
     </>
   );
 }
