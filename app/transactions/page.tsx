@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { TransactionTable, type Transaction } from '@/components/transaction-table';
 import { authenticatedFetch } from '@/lib/auth-client';
-import { NoTransactionsEmpty } from '@/components/ui/empty-states';
+import { formatAmount } from '@/lib/utils';
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -84,12 +84,48 @@ export default function TransactionsPage() {
       ) : (
         <>
           <div className="rounded-md border">
-            <TransactionTable
-              transactions={transactions}
-              onSort={toggleSort}
-              sortBy={sortBy}
-              order={order}
-            />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <Button variant="ghost" size="sm" className="-ml-3" onClick={() => toggleSort('createdAt')}>
+                      Date <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead>Circle</TableHead>
+                  <TableHead>Round</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => toggleSort('amount')}>
+                      Amount <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.map((tx: Transaction) => (
+                  <TableRow key={tx.id}>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(tx.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/circles/${tx.circle.id}`} className="hover:underline font-medium">
+                        {tx.circle.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">#{tx.round}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant[tx.status] ?? 'secondary'}>
+                        {tx.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatAmount(tx.amount)} XLM
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}
