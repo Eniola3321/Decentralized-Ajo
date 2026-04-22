@@ -1,0 +1,27 @@
+name: Contract Limit Sync Check
+
+on:
+  push:
+    paths:
+      - "contracts/ajo-circle/src/lib.rs"
+      - "lib/validations/circle.ts"
+      - "scripts/check-limit-sync.mjs"
+  pull_request:
+    paths:
+      - "contracts/ajo-circle/src/lib.rs"
+      - "lib/validations/circle.ts"
+      - "scripts/check-limit-sync.mjs"
+
+jobs:
+  limit-sync:
+    name: Assert contract limits match TypeScript validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run limit sync check
+        run: node scripts/check-limit-sync.mjs

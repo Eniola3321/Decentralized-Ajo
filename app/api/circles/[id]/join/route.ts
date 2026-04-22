@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken, extractToken } from '@/lib/auth';
+import { MAX_MEMBERS } from '@/lib/validations/circle';
 
 // GET - Preview circle info before joining (public, auth required but no membership check)
 export async function GET(
@@ -102,6 +103,13 @@ export async function POST(
     if (circle.status !== 'ACTIVE' && circle.status !== 'PENDING') {
       return NextResponse.json(
         { error: 'This circle is not accepting new members' },
+        { status: 403 }
+      );
+    }
+
+    if (circle.members.length >= MAX_MEMBERS) {
+      return NextResponse.json(
+        { error: `Circle has reached the maximum of ${MAX_MEMBERS} members` },
         { status: 403 }
       );
     }

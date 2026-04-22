@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken, extractToken } from '@/lib/auth';
+import { contributeSchema } from '@/lib/validations/circle';
 
 export async function POST(
   request: NextRequest,
@@ -27,15 +28,16 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { amount } = body;
 
-    // Validate input
-    if (!amount || amount <= 0) {
+    // Validate against contract constants
+    const parsed = contributeSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid contribution amount' },
+        { error: 'Invalid contribution amount', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+    const { amount } = parsed.data;
 
     // Get circle
     const circle = await prisma.circle.findUnique({

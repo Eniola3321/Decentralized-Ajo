@@ -1,5 +1,34 @@
 #![no_std]
 
+// LIMIT_SYNC_TAG: v1.0.2
+// These constants are the canonical source of truth for all circle operational limits.
+// Any change here MUST be reflected in lib/validations/circle.ts (same tag version).
+// The CI script scripts/check-limit-sync.mjs enforces this automatically.
+
+/// Maximum number of members allowed in a single circle (including organizer).
+pub const MAX_MEMBERS: u32 = 20;
+
+/// Minimum contribution amount in stroops (1 XLM = 10_000_000 stroops).
+pub const MIN_CONTRIBUTION_AMOUNT: i128 = 10_000_000; // 1 XLM
+
+/// Maximum contribution amount in stroops.
+pub const MAX_CONTRIBUTION_AMOUNT: i128 = 100_000_000_000; // 10,000 XLM
+
+/// Minimum frequency between rounds, in days.
+pub const MIN_FREQUENCY_DAYS: u32 = 1;
+
+/// Maximum frequency between rounds, in days.
+pub const MAX_FREQUENCY_DAYS: u32 = 365;
+
+/// Minimum number of rounds a circle must run.
+pub const MIN_ROUNDS: u32 = 2;
+
+/// Maximum number of rounds a circle can run (must equal MAX_MEMBERS).
+pub const MAX_ROUNDS: u32 = 20;
+
+/// Early-withdrawal penalty percentage applied to partial withdrawals.
+pub const WITHDRAWAL_PENALTY_PERCENT: i128 = 10;
+
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Symbol, Address, Map, Vec, BytesN};
 
 // Custom types
@@ -39,14 +68,14 @@ impl AjoCircle {
     ) -> Result<(), Symbol> {
         organizer.require_auth();
 
-        // Validate inputs
-        if contribution_amount <= 0 {
+        // Validate inputs against canonical constants
+        if contribution_amount < MIN_CONTRIBUTION_AMOUNT || contribution_amount > MAX_CONTRIBUTION_AMOUNT {
             return Err(symbol_short!("badamt"));
         }
-        if frequency_days == 0 {
+        if frequency_days < MIN_FREQUENCY_DAYS || frequency_days > MAX_FREQUENCY_DAYS {
             return Err(symbol_short!("badfreq"));
         }
-        if max_rounds == 0 {
+        if max_rounds < MIN_ROUNDS || max_rounds > MAX_ROUNDS {
             return Err(symbol_short!("badrnd"));
         }
 
@@ -109,6 +138,11 @@ impl AjoCircle {
         // Check if member already exists
         if members.contains_key(&new_member) {
             return Err(symbol_short!("exists"));
+        }
+
+        // Enforce max member cap
+        if circle.member_count >= MAX_MEMBERS {
+            return Err(symbol_short!("maxmem"));
         }
 
         // Add new member
@@ -231,9 +265,8 @@ impl AjoCircle {
                 return Err(symbol_short!("insufund"));
             }
 
-            // Apply 10% penalty
-            let penalty_percent = 10i128;
-            let penalty = (amount * penalty_percent) / 100;
+            // Apply canonical withdrawal penalty
+            let penalty = (amount * WITHDRAWAL_PENALTY_PERCENT) / 100;
             let net_amount = amount - penalty;
 
             member_data.total_withdrawn += amount;

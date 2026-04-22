@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken, extractToken } from '@/lib/auth';
+import { createCircleSchema, MAX_MEMBERS } from '@/lib/validations/circle';
 
 // POST - Create a new circle
 export async function POST(request: NextRequest) {
@@ -24,21 +25,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      name,
-      description,
-      contributionAmount,
-      contributionFrequencyDays,
-      maxRounds,
-    } = body;
 
-    // Validate inputs
-    if (!name || contributionAmount <= 0 || contributionFrequencyDays <= 0 || maxRounds <= 0) {
+    // Validate inputs against contract constants
+    const parsed = createCircleSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid input parameters' },
+        { error: 'Invalid input parameters', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+
+    const { name, description, contributionAmount, contributionFrequencyDays, maxRounds } =
+      parsed.data;
 
     // Create circle
     const circle = await prisma.circle.create({
